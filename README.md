@@ -19,3 +19,4 @@ Visit <https://firebase.google.com/> for more information on creating a Firebase
 m-ahmadian
 
 ## License
+See [LICENSE](https://github.com/m-ahmadian/FriendlyChat/blob/master/LICENSE).
