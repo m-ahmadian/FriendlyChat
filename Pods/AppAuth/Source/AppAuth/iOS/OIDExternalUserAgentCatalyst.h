@@ -18,7 +18,7 @@
 
 #import <TargetConditionals.h>
 
-#if TARGET_OS_IOS || TARGET_OS_MACCATALYST
+#if TARGET_OS_IOS
 
 #import <UIKit/UIKit.h>
 
@@ -29,7 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
 /*! @brief A Catalyst specific external user-agent that uses `ASWebAuthenticationSession` to
        present the request.
 */
-API_AVAILABLE(macCatalyst(13)) API_UNAVAILABLE(ios)
+#endif
+
+#if !TARGET_OS_MACCATALYST
 @interface OIDExternalUserAgentCatalyst : NSObject<OIDExternalUserAgent>
 
 /*! @internal

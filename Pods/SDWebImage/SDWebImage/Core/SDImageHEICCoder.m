@@ -20,10 +20,10 @@ static NSString * kSDCGImagePropertyHEICSUnclampedDelayTime = @"UnclampedDelayTi
 + (void)initialize {
     if (@available(iOS 13, tvOS 13, macOS 10.15, watchOS 6, *)) {
         // Use SDK instead of raw value
-        kSDCGImagePropertyHEICSDictionary = (__bridge NSString *)kCGImagePropertyHEICSDictionary;
-        kSDCGImagePropertyHEICSLoopCount = (__bridge NSString *)kCGImagePropertyHEICSLoopCount;
-        kSDCGImagePropertyHEICSDelayTime = (__bridge NSString *)kCGImagePropertyHEICSDelayTime;
-        kSDCGImagePropertyHEICSUnclampedDelayTime = (__bridge NSString *)kCGImagePropertyHEICSUnclampedDelayTime;
+        kSDCGImagePropertyHEICSDictionary = (__bridge NSString *)kCGImagePropertyGIFDictionary;
+        kSDCGImagePropertyHEICSLoopCount = (__bridge NSString *)kCGImagePropertyGIFLoopCount;
+        kSDCGImagePropertyHEICSDelayTime = (__bridge NSString *)kCGImagePropertyGIFDelayTime;
+        kSDCGImagePropertyHEICSUnclampedDelayTime = (__bridge NSString *)kCGImagePropertyGIFUnclampedDelayTime;
     }
 }
 

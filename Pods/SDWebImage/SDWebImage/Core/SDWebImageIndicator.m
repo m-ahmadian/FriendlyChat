@@ -137,11 +137,7 @@
 + (SDWebImageActivityIndicator *)largeIndicator {
     SDWebImageActivityIndicator *indicator = [SDWebImageActivityIndicator new];
 #if SD_UIKIT
-    if (@available(iOS 13.0, tvOS 13.0, *)) {
-        indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleLarge;
-    } else {
-        indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
-    }
+    indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
 #else
     indicator.indicatorView.controlSize = NSControlSizeRegular;
     [indicator.indicatorView sizeToFit];
@@ -152,11 +148,7 @@
 + (SDWebImageActivityIndicator *)mediumIndicator {
     SDWebImageActivityIndicator *indicator = [SDWebImageActivityIndicator new];
 #if SD_UIKIT
-    if (@available(iOS 13.0, tvOS 13.0, *)) {
-        indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleMedium;
-    } else {
-        indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite;
-    }
+    indicator.indicatorView.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhite;
 #else
     indicator.indicatorView.controlSize = NSControlSizeSmall;
     [indicator.indicatorView sizeToFit];

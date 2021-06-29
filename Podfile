@@ -1,7 +1,7 @@
-# FriendlyChat
+ # FriendlyChat
 
 use_frameworks!
-platform :ios, '11.0'
+platform :ios, '10.13.6'
 
 pod 'Firebase/Storage'
 pod 'Firebase/Core'

@@ -70,7 +70,12 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     func configureDatabase() {
-        // TODO: configure database to sync messages
+        ref = FIRDatabase.database().reference()
+        _refHandle = ref.child("messages").observe(.childAdded) { (snapshot: FIRDataSnapshot) in
+            self.messages.append(snapshot)
+            self.messagesTable.insertRows(at: [IndexPath(row: self.messages.count - 1, section: 0)], with: .automatic)
+            self.scrollToBottomMessage()
+        }
     }
     
     func configureStorage() {
@@ -78,7 +83,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     deinit {
-        // TODO: set up what needs to be deinitialized when view is no longer being used
+        ref.child("messages").removeObserver(withHandle: _refHandle)
     }
     
     // MARK: Remote Config
@@ -104,7 +109,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
         if (isSignedIn) {
             
             // remove background blur (will use when showing image messages)
-            messagesTable.rowHeight = UITableViewAutomaticDimension
+            messagesTable.rowHeight = UITableView.automaticDimension
             messagesTable.estimatedRowHeight = 122.0
             backgroundBlur.effect = nil
             messageTextField.delegate = self
@@ -121,7 +126,9 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     // MARK: Send Message
     
     func sendMessage(data: [String:String]) {
-        // TODO: create method that pushes message to the firebase database
+        var mdata = data
+        mdata[Constants.MessageFields.name] = displayName
+        ref.child("messages").childByAutoId().setValue(mdata)
     }
     
     func sendPhotoMessage(photoData: Data) {
@@ -201,12 +208,18 @@ extension FCViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // dequeue cell
         let cell: UITableViewCell! = messagesTable.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
+        // unpack message from firebase data snapshot
+        let messageSnapshot: FIRDataSnapshot! = messages[indexPath.row]
+        let message = messageSnapshot.value as! [String: String]
+        let name = message[Constants.MessageFields.name] ?? "username"
+        let text = message[Constants.MessageFields.text] ?? "message"
+        cell!.textLabel?.text = name + ": " + text
+        cell!.imageView?.image = self.placeholderImage
         return cell!
-        // TODO: update cell to display message data
     }
     
-    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableViewAutomaticDimension
+    func tableView(_ tableView: UITableView) -> CGFloat {
+        return UITableView.automaticDimension
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -280,31 +293,31 @@ extension FCViewController: UITextFieldDelegate {
     
     // MARK: Show/Hide Keyboard
     
-    func keyboardWillShow(_ notification: Notification) {
+    @objc func keyboardWillShow(_ notification: Notification) {
         if !keyboardOnScreen {
             self.view.frame.origin.y -= self.keyboardHeight(notification)
         }
     }
     
-    func keyboardWillHide(_ notification: Notification) {
+    @objc func keyboardWillHide(_ notification: Notification) {
         if keyboardOnScreen {
             self.view.frame.origin.y += self.keyboardHeight(notification)
         }
     }
     
-    func keyboardDidShow(_ notification: Notification) {
+    @objc func keyboardDidShow(_ notification: Notification) {
         keyboardOnScreen = true
         dismissKeyboardRecognizer.isEnabled = true
         scrollToBottomMessage()
     }
     
-    func keyboardDidHide(_ notification: Notification) {
+    @objc func keyboardDidHide(_ notification: Notification) {
         dismissKeyboardRecognizer.isEnabled = false
         keyboardOnScreen = false
     }
     
     func keyboardHeight(_ notification: Notification) -> CGFloat {
-        return ((notification as NSNotification).userInfo![UIKeyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue.height
+        return ((notification as NSNotification).userInfo![UIResponder.keyboardFrameBeginUserInfoKey] as! NSValue).cgRectValue.height
     }
     
     func resignTextfield() {
@@ -319,10 +332,10 @@ extension FCViewController: UITextFieldDelegate {
 extension FCViewController {
     
     func subscribeToKeyboardNotifications() {
-        subscribeToNotification(.UIKeyboardWillShow, selector: #selector(keyboardWillShow))
-        subscribeToNotification(.UIKeyboardWillHide, selector: #selector(keyboardWillHide))
-        subscribeToNotification(.UIKeyboardDidShow, selector: #selector(keyboardDidShow))
-        subscribeToNotification(.UIKeyboardDidHide, selector: #selector(keyboardDidHide))
+        subscribeToNotification(UIResponder.keyboardWillShowNotification, selector: #selector(keyboardWillShow))
+        subscribeToNotification(UIResponder.keyboardWillHideNotification, selector: #selector(keyboardWillHide))
+        subscribeToNotification(UIResponder.keyboardDidShowNotification, selector: #selector(keyboardDidShow))
+        subscribeToNotification(UIResponder.keyboardDidHideNotification, selector: #selector(keyboardDidHide))
     }
     
     func subscribeToNotification(_ name: NSNotification.Name, selector: Selector) {

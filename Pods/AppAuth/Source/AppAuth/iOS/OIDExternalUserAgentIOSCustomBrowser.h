@@ -18,7 +18,7 @@
 
 #import <TargetConditionals.h>
 
-#if TARGET_OS_IOS || TARGET_OS_MACCATALYST
+#if TARGET_OS_IOS
 
 #import <Foundation/Foundation.h>
 
@@ -39,7 +39,9 @@ typedef NSURL *_Nullable (^OIDCustomBrowserURLTransformation)(NSURL *_Nullable r
         for browsers that require other modifications to the URL.  If the browser is not installed
         the user will be prompted to install it.
  */
-API_UNAVAILABLE(macCatalyst)
+#endif
+
+#if !TARGET_OS_MACCATALYST
 @interface OIDExternalUserAgentIOSCustomBrowser : NSObject<OIDExternalUserAgent>
 
 /*! @brief URL transformation block for the browser.

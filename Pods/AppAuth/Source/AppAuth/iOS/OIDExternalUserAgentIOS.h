@@ -18,7 +18,7 @@
 
 #import <TargetConditionals.h>
 
-#if TARGET_OS_IOS || TARGET_OS_MACCATALYST
+#if TARGET_OS_IOS
 
 #import <UIKit/UIKit.h>
 
@@ -31,7 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 /*! @brief An iOS specific external user-agent that uses the best possible user-agent available
         depending on the version of iOS to present the request.
  */
-API_UNAVAILABLE(macCatalyst)
+#endif
+
+#if !TARGET_OS_MACCATALYST
 @interface OIDExternalUserAgentIOS : NSObject<OIDExternalUserAgent>
 
 - (nullable instancetype)init API_AVAILABLE(ios(11))
