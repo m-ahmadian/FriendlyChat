@@ -53,9 +53,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     // MARK: Life Cycle
     
     override func viewDidLoad() {
-        self.signedInStatus(isSignedIn: true)
-        
-        // TODO: Handle what users see when view loads
+        configureAuth()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -66,7 +64,28 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     // MARK: Config
     
     func configureAuth() {
-        // TODO: configure firebase authentication
+        // listen for changes in the authorization state
+        _authHandle = FIRAuth.auth()?.addStateDidChangeListener { (auth: FIRAuth, user: FIRUser?) in
+            // refresh table data
+            self.messages.removeAll(keepingCapacity: false)
+            self.messagesTable.reloadData()
+            
+            // check if there is a current user
+            if let activeUser = user {
+                // check if the current app user is the current FIRUser
+                if self.user != activeUser {
+                    self.user = activeUser
+                    self.signedInStatus(isSignedIn: true)
+                    let name = user!.email!.components(separatedBy: "@")[0]
+                    self.displayName = name
+                }
+            } else {
+                // user must sign in
+                self.signedInStatus(isSignedIn: false)
+                self.loginSession()
+            }
+            
+        }
     }
     
     func configureDatabase() {
@@ -84,6 +103,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     
     deinit {
         ref.child("messages").removeObserver(withHandle: _refHandle)
+        FIRAuth.auth()?.removeStateDidChangeListener(_authHandle)
     }
     
     // MARK: Remote Config
@@ -208,7 +228,7 @@ extension FCViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // dequeue cell
         let cell: UITableViewCell! = messagesTable.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
-        // unpack message from firebase data snapshot
+        // unpack message from firebase data snapshot 
         let messageSnapshot: FIRDataSnapshot! = messages[indexPath.row]
         let message = messageSnapshot.value as! [String: String]
         let name = message[Constants.MessageFields.name] ?? "username"
