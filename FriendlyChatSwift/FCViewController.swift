@@ -69,7 +69,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
         FUIAuth.defaultAuthUI()?.providers = provider
         
         // listen for changes in the authorization state
-        _authHandle = FIRAuth.auth()?.addStateDidChangeListener { (auth: FIRAuth, user: FIRUser?) in
+        _authHandle = Auth.auth().addStateDidChangeListener({ (auth, user) in
             // refresh table data
             self.messages.removeAll(keepingCapacity: false)
             self.messagesTable.reloadData()
@@ -88,26 +88,25 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
                 self.signedInStatus(isSignedIn: false)
                 self.loginSession()
             }
-            
-        }
+        })
     }
     
     func configureDatabase() {
-        ref = FIRDatabase.database().reference()
-        _refHandle = ref.child("messages").observe(.childAdded) { (snapshot: FIRDataSnapshot) in
+        ref = Database.database().reference()
+        _refHandle = ref.child("messages").observe(.childAdded, with: { (snapshot) in
             self.messages.append(snapshot)
             self.messagesTable.insertRows(at: [IndexPath(row: self.messages.count - 1, section: 0)], with: .automatic)
             self.scrollToBottomMessage()
-        }
+        })
     }
     
     func configureStorage() {
-        // TODO: configure storage using your firebase storage
+        storageRef = Storage.storage().reference()
     }
     
     deinit {
         ref.child("messages").removeObserver(withHandle: _refHandle)
-        FIRAuth.auth()?.removeStateDidChangeListener(_authHandle)
+        Auth.auth().removeStateDidChangeListener(_authHandle)
     }
     
     // MARK: Remote Config
@@ -138,7 +137,8 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
             backgroundBlur.effect = nil
             messageTextField.delegate = self
             
-            // TODO: Set up app to send and receive messages when signed in
+            configureDatabase()
+            configureStorage()
         }
     }
     
@@ -156,7 +156,20 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     func sendPhotoMessage(photoData: Data) {
-        // TODO: create method that pushes message w/ photo to the firebase database
+        // build a path using the user's ID and a timestamp
+        let imagePath = "chat_photos/" + Auth.auth().currentUser!.uid + "/\(Double(Date.timeIntervalSinceReferenceDate * 1000)).jpg"
+        // set content type to "image/jpeg" in firebase storage meta data
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        // create a child node at imagePath with photoData and metadata
+        storageRef.child(imagePath).putData(photoData, metadata: metadata) { (metadata, error) in
+            if let error = error {
+                print("error uploading: \(error)")
+                return
+            }
+            // use sendMessage to add imageURL to database
+            self.sendMessage(data: [Constants.MessageFields.imageUrl : self.storageRef.child((metadata?.path)!).description ])
+        }
     }
     
     // MARK: Alert
@@ -233,7 +246,7 @@ extension FCViewController: UITableViewDelegate, UITableViewDataSource {
         // dequeue cell
         let cell: UITableViewCell! = messagesTable.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
         // unpack message from firebase data snapshot 
-        let messageSnapshot: FIRDataSnapshot! = messages[indexPath.row]
+        let messageSnapshot: DataSnapshot! = messages[indexPath.row]
         let message = messageSnapshot.value as! [String: String]
         let name = message[Constants.MessageFields.name] ?? "username"
         let text = message[Constants.MessageFields.text] ?? "message"
