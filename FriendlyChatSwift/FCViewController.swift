@@ -112,11 +112,40 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     // MARK: Remote Config
     
     func configureRemoteConfig() {
-        // TODO: configure remote configuration settings
+        // create remote config setting to enable developer mode
+        let remoteConfigSettings = RemoteConfigSettings()
+        remoteConfigSettings.minimumFetchInterval = 0
+        remoteConfig = RemoteConfig.remoteConfig()
+        remoteConfig.configSettings = remoteConfigSettings
+        
     }
     
     func fetchConfig() {
-        // TODO: update to the current coniguratation
+        var expirationDuration: Double = 3600
+        // if developer mode, set expirationDuration to 0
+        if remoteConfig.configSettings.minimumFetchInterval == 0 {
+            expirationDuration = 0
+        }
+        // fetch config
+        remoteConfig.fetch(withExpirationDuration: expirationDuration) { (status, error) in
+            if status == .success {
+                print("config fetched")
+                self.remoteConfig.activate(completion: { (success, error) in
+                    guard error == nil else {
+                        return
+                    }
+                    let friendlyMsgLength = self.remoteConfig["friendly_msg_length"]
+                    if friendlyMsgLength.source != .static {
+                        self.msglength = friendlyMsgLength.numberValue
+                        print("friendly msg length config: \(self.msglength)")
+                    }
+                })
+            } else {
+                print("config not fetched")
+                print("error: \(String(describing: error))")
+            }
+        }
+        
     }
     
     // MARK: Sign In and Out
@@ -139,6 +168,8 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
             
             configureDatabase()
             configureStorage()
+            configureRemoteConfig()
+            fetchConfig()
         }
     }
     
