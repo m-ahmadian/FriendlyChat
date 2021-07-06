@@ -121,7 +121,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     }
     
     func fetchConfig() {
-        var expirationDuration: Double = 3600
+        var expirationDuration: Double = 3600
         // if developer mode, set expirationDuration to 0
         if remoteConfig.configSettings.minimumFetchInterval == 0 {
             expirationDuration = 0
